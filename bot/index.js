@@ -26,7 +26,13 @@ require('./connect-db')()
 
             for await (const channel of channels) {
                 const releaseIndex = Object.keys(getVersions()).findIndex(
-                    version => version.toString() === channel.release.toString()
+                    version => {
+                        const channelRelease = channel.release?.version
+                            ? channel.release.version
+                            : channel.release;
+
+                        return version === channelRelease;
+                    }
                 );
 
                 await bot.telegram.sendMessage(
