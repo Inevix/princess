@@ -1,3 +1,6 @@
+const cleanDB = require('./helpers/clean-db');
+const Channel = require('./models/channel');
+const searchCriteria = require('./helpers/search-criteria');
 require('./connect-db')()
     .then(async () => {
         const bot = require('./bot');
@@ -17,18 +20,28 @@ require('./connect-db')()
             console.log('Bot successfully launched!');
 
             await cleanDB();
+        } catch (error) {
+            await Promise.reject(error);
+        }
 
-            const channels = await Channel.find(searchCriteria());
+        let channels;
 
-            if (!channels.length) {
-                return this;
-            }
+        try {
+            channels = await Channel.find(searchCriteria());
+        } catch (error) {
+            await Promise.reject(error);
+        }
 
-            for await (const channel of channels) {
-                const releaseIndex = Object.keys(getVersions()).findIndex(
-                    version => version === channel.release
-                );
+        if (!channels.length) {
+            return this;
+        }
 
+        for await (const channel of channels) {
+            const releaseIndex = Object.keys(getVersions()).findIndex(
+                version => version === channel.release
+            );
+
+            try {
                 await bot.telegram.sendMessage(
                     channel.entity_id,
                     releasesToPost(releaseIndex),
@@ -36,13 +49,22 @@ require('./connect-db')()
                         parse_mode: 'Markdown'
                     }
                 );
+            } catch (error) {
+                if (error.response.error_code === 403) {
+                    await channel.removePlayers();
+                    await Channel.findOneAndRemove({
+                        entity_id: error.on.payload.chat_id
+                    });
+                }
             }
+        }
 
+        try {
             await Channel.updateMany(searchCriteria(), {
                 release: getVersion()
             });
         } catch (error) {
-            console.log(error);
+            await Promise.reject(error);
         }
     })
     .catch(error => console.log(error));
