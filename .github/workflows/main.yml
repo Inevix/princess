@@ -1,0 +1,33 @@
+name: Build Princess Bot on VPS
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - name: Run a build command
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: main.yml
+          directory: ${{secrets.LOCAL_APP_PATH}}/.ansible
+          key: ${{secrets.SSH_PRIVATE_KEY}}
+          inventory: ${{secrets.INVENTORY}}
+          options: |
+            -e RELEASE=${{github.ref_name}}
+            -e NODE_ENV=production
+            -e VPS_USER=${{secrets.VPS_USER}}
+            -e VPS_APP_PATH=${{secrets.VPS_APP_PATH}}
+            -e GITHUB_REPO=${{github.repository}}
+            -e BOT_TOKEN=${{secrets.BOT_TOKEN}}
+            -e MONGODB_URI=${{secrets.MONGODB_URI}}
+            -e ADMIN_ID=${{secrets.ADMIN_ID}}
+            -e AUTHOR_TWITTER_LINK=${{secrets.AUTHOR_TWITTER_LINK}}
+            -e GITHUB_REPO_URL=https://github.com/${{github.repository}}
+            -e WISHLIST_TG_URL=${{secrets.WISHLIST_TG_URL}}
+            -e WISHLIST_GITHUB_REPO_URL=${{secrets.WISHLIST_GITHUB_REPO_URL}}
+            -e CHATGPT_TG_URL=${{secrets.CHATGPT_TG_URL}}
+            -e CHATGPT_GITHUB_REPO_URL=${{secrets.CHATGPT_GITHUB_REPO_URL}}

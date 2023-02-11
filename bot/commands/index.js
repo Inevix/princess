@@ -1,0 +1,13 @@
+require('./start');
+require('./help');
+require('./propose');
+require('./join');
+require('./leave');
+require('./run');
+require('./sudorun');
+require('./list');
+require('./top');
+require('./reset');
+require('./stop');
+require('./stats');
+require('./releases');
